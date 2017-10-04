@@ -1,0 +1,11 @@
+{
+  "name": "cwbot",
+  "version": "0.0.1",
+  "description": "Creative Workshop Bot",
+  "main": "bot.js",
+  "author": "CW",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^11.2.1"
+  }
+}
