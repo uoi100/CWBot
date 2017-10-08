@@ -20,9 +20,15 @@ function msgStd(message)
 		let target = message.mentions.members.first();
 		
 		// Check if target exists
-		if(target === undefined || target != args[0]){
-			message.channel.send(`Invalid argument please use the following format:\n
-				!kick @username reason.`);
+		if(target === undefined || target.user != args[0]){
+			message.channel.send(`Invalid argument please use the following format:
+			\`\`\`!kick @username reason.\`\`\``);
+			return;
+		}
+	
+		if(target.user === bot.user)
+		{
+			message.reply("Are you telling me to kick myself? :unamused:");
 			return;
 		}
 		
