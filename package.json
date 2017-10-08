@@ -6,6 +6,7 @@
   "author": "CW",
   "license": "ISC",
   "dependencies": {
-    "discord.js": "^11.2.1"
+    "discord.js": "^11.2.1",
+    "wait-until": "0.0.2"
   }
 }
