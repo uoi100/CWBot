@@ -78,4 +78,8 @@ bot.on("ready", async () => {
 	})
 });
 
+bot.on("guildMemberAdd", async guildMember => {
+	guildMember.guild.defaultChannel.send(`Welcome ${guildMember.displayName}! Introduce yourself and check out the #rules channel to understand more about our community.`);
+});
+
 bot.login(botSettings.token);

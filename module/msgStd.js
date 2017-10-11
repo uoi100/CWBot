@@ -98,7 +98,7 @@ function ban(bot, message)
 			.then(member => 
 			{
 				let embed = new Discord.RichEmbed()
-					.setTitle("Kicked")
+					.setTitle("Banned")
 					.setAuthor(target.user.username, target.user.avatarURL)
 					.setColor(0xFF0000)
 					.setTimestamp()
