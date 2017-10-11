@@ -8,7 +8,7 @@ function msgStd(message)
 {
 	const funcStd = require("./module/msgStd.js");
 	
-	funcStd.msgHandle(bot, message);
+	funcStd(bot, message);
 }
 
 // Leveling System
