@@ -1,5 +1,7 @@
 const botSettings = require("./botsettings.json");
 const Discord = require("discord.js");
+const sql = require("sqlite");
+sql.open("./sql.sqlite");
 
 const bot = new Discord.Client({disableEveryone: true});
 
@@ -14,7 +16,63 @@ function msgStd(message)
 // Leveling System
 function msgLevel(message)
 {
+	let expPoints = message.content.length;
+	
+	sql.get(`SELECT * FROM exptable WHERE userId = "${message.author.id}"`)
+	.then(row => {
+		if(!row)
+			sql.run("INSERT INTO exptable (userId, exp, level) VALUES (?, ?, ?)", [message.author.id, expPoints, 0]);
+		else
+		{
+			sql.run(`UPDATE exptable SET exp = ${row.exp + expPoints} WHERE userId = ${message.author.id}`);
+		
+			let curLevel = Math.floor(0.01 * Math.sqrt(row.exp + 1));
+			if(curLevel > row.level)
+			{
+				row.level = curLevel;
+				sql.run(`UPDATE exptable SET exp = 0, level = ${row.level} WHERE userId = ${message.author.id}`);
+				message.reply(`You've leveled up to level ${curLevel}!`);
+			}
+		}
 
+	})
+	.catch(() => {
+		console.error;
+		
+		sql.run("CREATE TABLE IF NOT EXISTS exptable (userId TEXT, exp INTEGER, level INTEGER)")
+		.then(() => {
+			sql.run("INSERT INTO exptable (userId, exp, level) VALUES (?, ?, ?)", [message.author.id, expPoints, 0]);
+		});
+	});
+	
+	let args = message.content.split(" ");
+	let cmd = args[0];
+	let prefix = botSettings.prefix;
+	
+	if(!cmd.startsWith(prefix)) return;
+	// Remove the command from the args
+	args = args.slice(1);
+	
+	if(cmd === `${prefix}level`)
+	{
+		sql.get(`SELECT * FROM exptable WHERE userId = "${message.author.id}"`)
+		.then(row =>
+		{
+			if(!row) return message.reply("Your current level is 0.");
+			message.reply(`Your current level is ${row.level}.`);
+		});
+	}
+	
+		if(cmd === `${prefix}exp`)
+	{
+		sql.get(`SELECT * FROM exptable WHERE userId = "${message.author.id}"`)
+		.then(row =>
+		{
+			if(!row) return message.reply(`Your current exp is ${expPoints}.`);
+			message.reply(`Your current exp is ${row.exp + expPoints}.`);
+		});
+	}
+	
 }
 
 // Human Resource Manager
@@ -43,39 +101,26 @@ bot.on("ready", async () => {
 	}).catch(err => {
 		console.log(err.stack);
 	});
-	
-	bot.on("message", async message => {
-		if(message.author.bot) return;
-		if(message.channel.type === "dm") return;
-		
-		let args = message.content.split(" ");
-		let cmd = args[0];
-		let prefix = botSettings.prefix;
-		
-		args = args.slice(1);
-		
-		if(!cmd.startsWith(prefix)) return;
-		
-		if(cmd === `${prefix}test`)
-		{
-			message.channel.send('Hello World!');
-		}
-		
-		// Standard Features
-		msgStd(message);
-		
-		// Leveling
-		msgLevel(message);
+});
 
-		// Human Resource
-		msgHR(message);
-		
-		// Project
-		msgProject(message);
-		
-		// Rep System
-		msgRep(message);
-	})
+bot.on("message", async message => {
+	if(message.author.bot) return;
+	if(message.channel.type === "dm") return;
+	
+	// Standard Features
+	msgStd(message);
+	
+	// Leveling
+	msgLevel(message);
+
+	// Human Resource
+	msgHR(message);
+	
+	// Project
+	msgProject(message);
+	
+	// Rep System
+	msgRep(message);
 });
 
 bot.on("guildMemberAdd", async guildMember => {

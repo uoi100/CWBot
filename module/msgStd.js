@@ -7,6 +7,7 @@ function msgHandle(bot, message)
 	let cmd = args[0];
 	let prefix = botSettings.prefix;
 	
+	if(!cmd.startsWith(prefix)) return;
 	// Remove the command from the args
 	args = args.slice(1);
 	
@@ -112,6 +113,19 @@ function ban(bot, message)
 			});
 	else
 		message.reply("You don't have the BAN_MEMBERS permission to ban someone.");
+	
+}
+
+function rList(bot, message)
+{
+	let msg = "\`\`\`\nList of roles\n";
+	msg += "-------------";
+	
+	//TODO: List roles added by the user
+	
+	msg += "\`\`\`";
+	
+	message.channel.send(msg);
 	
 }
 
