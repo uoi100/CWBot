@@ -1,5 +1,7 @@
 const botSettings = require("../botsettings.json");
 const Discord = require("discord.js");
+const sql = require("sqlite");
+sql.open("./sql.sqlite");
 
 function msgHandle(bot, message)
 {
@@ -126,6 +128,25 @@ function rList(bot, message)
 	msg += "\`\`\`";
 	
 	message.channel.send(msg);
+}
+
+function rAdd(bot, message)
+{
+	
+}
+
+function rRemove(bot, message)
+{
+	
+}
+
+function rJoin(bot, message)
+{
+	
+}
+
+function rLeave(bot, message)
+{
 	
 }
 
