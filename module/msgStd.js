@@ -6,7 +6,7 @@ sql.open("./sql.sqlite");
 function msgHandle(bot, message)
 {
 	let args = message.content.split(" ");
-	let cmd = args[0];
+	let cmd = args[0].toLowerCase();
 	let prefix = botSettings.prefix;
 	
 	if(!cmd.startsWith(prefix)) return;
@@ -17,7 +17,8 @@ function msgHandle(bot, message)
 		kick(bot, message);
 	if(cmd === `${prefix}ban`)
 		ban(bot, message);
-	
+	if(cmd === `${prefix}radd`)
+		rAdd(message);
 }
 
 function kick(bot, message)
@@ -130,9 +131,29 @@ function rList(bot, message)
 	message.channel.send(msg);
 }
 
-function rAdd(bot, message)
+function rAdd(message)
 {
+	console.log("Debug");
+	let hasPerm = message.member.hasPermission("ADMINISTRATOR");
+	if(!hasPerm)
+	{
+		message.channel.send("You don't have the ADMINISTRATOR permission to add roles.");
+		return;
+	}
 	
+	let args = message.content.split(" ");
+	let cmd = args[0];
+	let prefix = botSettings.prefix;
+	
+	let role = message.guild.roles.find( val => val.name === message.content.slice(cmd.length + 1));
+	
+	console.log(`role: ${role}`);
+	
+	if(role === null)
+	{
+		message.channel.send("Unable to find role.")
+		return;
+	}
 }
 
 function rRemove(bot, message)
