@@ -1,15 +1,14 @@
 const botSettings = require("./botsettings.json");
 const Discord = require("discord.js");
 const sql = require("sqlite");
+const funcStd = require("./module/msgStd.js")
 sql.open("./sql.sqlite");
 
 const bot = new Discord.Client({disableEveryone: true});
 
 // Standard Bot Features - Banning, Muting, Greeting, Roles
 function msgStd(message)
-{
-	const funcStd = require("./module/msgStd.js");
-	
+{	
 	funcStd(bot, message);
 }
 
@@ -21,16 +20,16 @@ function msgLevel(message)
 	sql.get(`SELECT * FROM exptable WHERE userId = "${message.author.id}"`)
 	.then(row => {
 		if(!row)
-			sql.run("INSERT INTO exptable (userId, exp, level) VALUES (?, ?, ?)", [message.author.id, expPoints, 0]);
+			sql.run("INSERT INTO exptable (userID, exp, level) VALUES (?, ?, ?)", [message.author.id, expPoints, 0]);
 		else
 		{
-			sql.run(`UPDATE exptable SET exp = ${row.exp + expPoints} WHERE userId = ${message.author.id}`);
+			sql.run(`UPDATE exptable SET exp = ${row.exp + expPoints} WHERE userID = ${message.author.id}`);
 		
-			let curLevel = Math.floor(0.01 * Math.sqrt(row.exp + 1));
+			let curLevel = Math.floor(0.1 * Math.sqrt(row.exp + 1));
 			if(curLevel > row.level)
 			{
 				row.level = curLevel;
-				sql.run(`UPDATE exptable SET exp = 0, level = ${row.level} WHERE userId = ${message.author.id}`);
+				sql.run(`UPDATE exptable SET exp = 0, level = ${row.level} WHERE userID = ${message.author.id}`);
 				message.reply(`You've leveled up to level ${curLevel}!`);
 			}
 		}
@@ -39,9 +38,9 @@ function msgLevel(message)
 	.catch(() => {
 		console.error;
 		
-		sql.run("CREATE TABLE IF NOT EXISTS exptable (userId TEXT, exp INTEGER, level INTEGER)")
+		sql.run("CREATE TABLE IF NOT EXISTS exptable (userID TEXT, exp INTEGER, level INTEGER)")
 		.then(() => {
-			sql.run("INSERT INTO exptable (userId, exp, level) VALUES (?, ?, ?)", [message.author.id, expPoints, 0]);
+			sql.run("INSERT INTO exptable (userID, exp, level) VALUES (?, ?, ?)", [message.author.id, expPoints, 0]);
 		});
 	});
 	
@@ -111,20 +110,16 @@ bot.on("message", async message => {
 	msgStd(message);
 	
 	// Leveling
-	msgLevel(message);
+	//msgLevel(message);
 
 	// Human Resource
-	msgHR(message);
+	//msgHR(message);
 	
 	// Project
-	msgProject(message);
+	//msgProject(message);
 	
 	// Rep System
-	msgRep(message);
-});
-
-bot.on("guildMemberAdd", async guildMember => {
-	guildMember.guild.defaultChannel.send(`Welcome ${guildMember.displayName}! Introduce yourself and check out the #rules channel to understand more about our community.`);
+	//msgRep(message);
 });
 
 bot.login(botSettings.token);

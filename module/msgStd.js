@@ -13,12 +13,15 @@ function msgHandle(bot, message)
 	// Remove the command from the args
 	args = args.slice(1);
 	
+	
 	if(cmd === `${prefix}kick`)
 		kick(bot, message);
 	if(cmd === `${prefix}ban`)
 		ban(bot, message);
 	if(cmd === `${prefix}radd`)
 		rAdd(message);
+	if(cmd === `${prefix}rlist`)
+		rList(message);
 }
 
 function kick(bot, message)
@@ -119,21 +122,38 @@ function ban(bot, message)
 	
 }
 
-function rList(bot, message)
+
+function rList(message)
 {
 	let msg = "\`\`\`\nList of roles\n";
-	msg += "-------------";
+	msg += "-------------\n";
 	
 	//TODO: List roles added by the user
 	
-	msg += "\`\`\`";
+	sql.all(`SELECT * FROM roletable WHERE guildID = "${message.member.guild.id}"`)
+	.then( function(rows)  {
+		if(rows)
+		{
+			for(n in rows){
+				let role = message.guild.roles.find( val => val.id === rows[n].roleID);
+				msg += role.name + "\n";
+			}
+			
+			msg += "\`\`\`";
+			
+			message.channel.send(msg);
+		}
+	})
+	.catch( () => {
+		
+		
+	});
 	
-	message.channel.send(msg);
+	
 }
 
 function rAdd(message)
 {
-	console.log("Debug");
 	let hasPerm = message.member.hasPermission("ADMINISTRATOR");
 	if(!hasPerm)
 	{
@@ -144,16 +164,45 @@ function rAdd(message)
 	let args = message.content.split(" ");
 	let cmd = args[0];
 	let prefix = botSettings.prefix;
+	let target = args[1];
 	
-	let role = message.guild.roles.find( val => val.name === message.content.slice(cmd.length + 1));
-	
-	console.log(`role: ${role}`);
+	let role = message.guild.roles.find( val => val.name === target);
 	
 	if(role === null)
 	{
 		message.channel.send("Unable to find role.")
 		return;
 	}
+	
+	
+	sql.all(`SELECT * FROM roletable WHERE guildID = "${message.member.guild.id}"`)
+	.then(rows => {
+		if(rows)
+		{
+			let checkExist = false;
+			
+			for(n in rows){
+				if(rows[n].roleID === role.id)
+					checkExist = true;
+			}
+			
+			//console.log(`Debug checkExist: ${checkExist}`);
+			
+			if(!checkExist)
+				sql.run("INSERT INTO roletable (guildID, roleID) VALUES (?, ?)", [message.member.guild.id, role.id]);
+			
+		} else {
+			sql.run("INSERT INTO roletable (guildID, roleID) VALUES (?, ?)", [message.member.guild.id, role.id]);
+		}
+	})
+	.catch(() => {
+		sql.run("CREATE TABLE IF NOT EXISTS roletable (guildID TEXT, roleID TEXT)")
+		.then(() => {
+			sql.run("INSERT INTO roletable (guildID, roleID) VALUES (?, ?)", [message.member.guild.id, role.id]);
+		})
+		.catch(() => {});
+	});
+	
 }
 
 function rRemove(bot, message)
