@@ -18,15 +18,15 @@ function msgHandle(bot, message)
 		kick(bot, message);
 	if(cmd === `${prefix}ban`)
 		ban(bot, message);
-	if(cmd === `${prefix}radd`)
-		rAdd(message);
 	if(cmd === `${prefix}rlist`)
 		rList(message);
+	if(cmd === `${prefix}radd`)
+		rAdd(message);
 	if(cmd === `${prefix}rremove`)
 		rRemove(message);
-	if(cmd === `${prefix}rjoin`)
+	if(cmd === `${prefix}iam`)
 		rJoin(message);
-	if(cmd === `${prefix}rleave`)
+	if(cmd === `${prefix}iamn` || cmd === `${prefix}iamnot`)
 		rLeave(message);
 }
 
