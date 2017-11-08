@@ -22,6 +22,12 @@ function msgHandle(bot, message)
 		rAdd(message);
 	if(cmd === `${prefix}rlist`)
 		rList(message);
+	if(cmd === `${prefix}rremove`)
+		rRemove(message);
+	if(cmd === `${prefix}rjoin`)
+		rJoin(message);
+	if(cmd === `${prefix}rleave`)
+		rLeave(message);
 }
 
 function kick(bot, message)
@@ -148,8 +154,6 @@ function rList(message)
 		
 		
 	});
-	
-	
 }
 
 function rAdd(message)
@@ -163,61 +167,167 @@ function rAdd(message)
 	
 	let args = message.content.split(" ");
 	let cmd = args[0];
-	let prefix = botSettings.prefix;
 	let target = args[1];
 	
+	// Validate that the role exists in the guild
 	let role = message.guild.roles.find( val => val.name === target);
-	
 	if(role === null)
 	{
 		message.channel.send("Unable to find role.")
 		return;
 	}
 	
-	
-	sql.all(`SELECT * FROM roletable WHERE guildID = "${message.member.guild.id}"`)
-	.then(rows => {
-		if(rows)
+	sql.get(`SELECT * FROM roletable WHERE guildID = "${message.member.guild.id}" AND roleID = "${role.id}"`)
+	.then(row => {
+		if(row)
 		{
-			let checkExist = false;
-			
-			for(n in rows){
-				if(rows[n].roleID === role.id)
-					checkExist = true;
-			}
-			
-			//console.log(`Debug checkExist: ${checkExist}`);
-			
-			if(!checkExist)
-				sql.run("INSERT INTO roletable (guildID, roleID) VALUES (?, ?)", [message.member.guild.id, role.id]);
-			
+			message.channel.send(`${target} already exists in the role list.`);
 		} else {
-			sql.run("INSERT INTO roletable (guildID, roleID) VALUES (?, ?)", [message.member.guild.id, role.id]);
+			sql.run("INSERT INTO roletable (guildID, roleID) VALUES (?, ?)", [message.member.guild.id, role.id])
+			.then(()=>{
+				message.channel.send(`${target} successfully added to the role list.`);
+			}). catch( err =>{
+				console.log(err);
+			});
 		}
 	})
 	.catch(() => {
 		sql.run("CREATE TABLE IF NOT EXISTS roletable (guildID TEXT, roleID TEXT)")
 		.then(() => {
-			sql.run("INSERT INTO roletable (guildID, roleID) VALUES (?, ?)", [message.member.guild.id, role.id]);
+			sql.run("INSERT INTO roletable (guildID, roleID) VALUES (?, ?)", [message.member.guild.id, role.id])
+			.then(()=>{
+				message.channel.send(`${target} successfully added to the role list.`);
+			})
+			.catch( err =>{
+				console.log(err);
+			});
 		})
 		.catch(() => {});
 	});
 	
 }
 
-function rRemove(bot, message)
-{
+function rRemove(message){
+	let hasPerm = message.member.hasPermission("ADMINISTRATOR");
+	if(!hasPerm)
+	{
+		message.channel.send("You don't have the ADMINISTRATOR permission to add roles.");
+		return;
+	}
 	
+	let args = message.content.split(" ");
+	let cmd = args[0];
+	let target = args[1];
+	
+	// Validate that the role exists in the guild
+	let role = message.guild.roles.find( val => val.name === target);
+	if(role === null)
+	{
+		message.channel.send("Unable to find role.")
+		return;
+	}
+	
+	sql.get(`SELECT * FROM roletable WHERE guildID = "${message.member.guild.id}" AND roleID = "${role.id}"`)
+	.then(row => {
+		if(row)
+		{
+			sql.run(`DELETE FROM roletable WHERE guildID = "${message.member.guild.id}" AND roleID = "${role.id}"`)
+			.then( () => {
+				message.channel.send(`${target} has been removed from the role list.`);	
+			})
+			.catch(err => {
+				console.log(err);
+			});
+			
+		} else {
+			message.channel.send("role does not exist in the role list.");
+		}
+	})
+	.catch(() => {
+		sql.run("CREATE TABLE IF NOT EXISTS roletable (guildID TEXT, roleID TEXT)")
+		.then(() => {
+			message.channel.send("role does not exist in the role list.");
+		})
+		.catch(err => {
+			console.log(err);
+		});
+	});
 }
 
-function rJoin(bot, message)
+function rJoin(message)
 {
+	let args = message.content.split(" ");
+	let cmd = args[0];
+	let target = args[1];
 	
+	// Validate that the role exists in the guild
+	let role = message.guild.roles.find( val => val.name === target);
+	if(role === null)
+	{
+		message.channel.send("Unable to find role.")
+		return;
+	}
+	
+	sql.get(`SELECT * FROM roletable WHERE guildID = "${message.member.guild.id}" AND roleID = "${role.id}"`)
+	.then(row => {
+		if(row)
+		{
+			// Add author to role
+			message.member.addRole(row.roleID)
+			.then(() => {
+				message.reply(`${target} role added successfully.`);
+			});
+		} else {
+			message.channel.send("role is not in the role list.");
+		}
+	})
+	.catch(() => {
+		sql.run("CREATE TABLE IF NOT EXISTS roletable (guildID TEXT, roleID TEXT)")
+		.then(() => {
+				message.channel.send("role is not in the role list.");
+			}). catch( err =>{
+				console.log(err);
+		})
+		.catch(() => {});
+	});
 }
 
-function rLeave(bot, message)
+function rLeave(message)
 {
+		let args = message.content.split(" ");
+	let cmd = args[0];
+	let target = args[1];
 	
+	// Validate that the role exists in the guild
+	let role = message.guild.roles.find( val => val.name === target);
+	if(role === null)
+	{
+		message.channel.send("Unable to find role.")
+		return;
+	}
+	
+	sql.get(`SELECT * FROM roletable WHERE guildID = "${message.member.guild.id}" AND roleID = "${role.id}"`)
+	.then(row => {
+		if(row)
+		{
+			// Add author to role
+			message.member.removeRole(row.roleID)
+			.then(() => {
+				message.reply(`${target} role removed successfully.`);
+			});
+		} else {
+			message.channel.send("role is not in the role list.");
+		}
+	})
+	.catch(() => {
+		sql.run("CREATE TABLE IF NOT EXISTS roletable (guildID TEXT, roleID TEXT)")
+		.then(() => {
+				message.channel.send("role is not in the role list.");
+			}). catch( err =>{
+				console.log(err);
+		})
+		.catch(() => {});
+	});
 }
 
 module.exports = msgHandle;
